@@ -1,18 +1,8 @@
 import NetInfo from '@react-native-community/netinfo';
 import {NavigationContainer, NavigationState} from '@react-navigation/native';
-import PushNotification from 'react-native-push-notification';
-import messaging from '@react-native-firebase/messaging';
-import analytics from '@react-native-firebase/analytics';
 import moment from 'moment';
 import React, {Component} from 'react';
-import {
-  AppRegistry,
-  StatusBar,
-  Text,
-  DeviceEventEmitter,
-  LogBox,
-  AppState,
-} from 'react-native';
+import {AppRegistry, DeviceEventEmitter, LogBox, AppState} from 'react-native';
 import {
   EMIT_APP_PAUSE,
   EMIT_APP_RESUME,
@@ -20,7 +10,6 @@ import {
   SettingKey,
 } from '../../../common/Constant';
 import DataSingleton, {DataSingletonKey} from '../../../common/DataSingleton';
-import {NotificationApp} from '../../../common/Type';
 import AlertBase from '../../../components/AlertBase';
 import ConnectStatusComponent from '../../../components/ConnectStatusComponent';
 import {Loading, mobileLoadingService} from '../../../components/Loading';
@@ -144,7 +133,6 @@ class App extends Component<Props> {
     //@ts-ignore
     DataSingleton.setData(DataSingletonKey.DEVICE_ID, deviceinfo.uniqueId);
     this.getCache();
-    this.requestUserPermission();
     this.onSetLanguage();
     this._subscriptionAppResume = DeviceEventEmitter.addListener(
       EMIT_APP_RESUME,
@@ -166,14 +154,6 @@ class App extends Component<Props> {
   getCache = async () => {};
   componentDidMount = async () => {
     // strings.setLanguage("vi");
-    try {
-      let token = await messaging().getToken();
-      DataSingleton.setData(DataSingletonKey.FIREBASE_KEY, token);
-      console.log('FIREBASE_KEY, day la token FCM', token);
-    } catch (error) {
-      DataSingleton.setData(DataSingletonKey.FIREBASE_KEY, null);
-      console.log('err_FIREBASE_KEY', error);
-    }
 
     this._taskInterval = setInterval(
       this._handleTimeInterval,
@@ -181,11 +161,6 @@ class App extends Component<Props> {
     );
 
     this.setupConnectivityListener();
-
-    // Setup auto init firebase analytics
-    await analytics().setAnalyticsCollectionEnabled(true);
-
-    this.setupFirebaseMessageListener();
 
     // Setup local notification listener, using to handle the callback when user click into notification
     if (localNotification) {
@@ -303,103 +278,6 @@ class App extends Component<Props> {
       }
     });
   };
-
-  /******************************************************************************************************************************
-   * Firebase
-   * Sử dụng để yêu cầu người dùng cấp quyền push notification cho ứng dụng
-   *
-   ******************************************************************************************************************************/
-  setupFirebaseMessageListener() {
-    // Check whether an initial notification is available
-    messaging()
-      .getInitialNotification()
-      .then((remoteMessage: any) => {
-        if (remoteMessage) {
-          let notificationApp: NotificationApp = remoteMessage;
-          DataSingleton.setData(
-            DataSingletonKey.DATA_NOTIFY_FIREBASE,
-            notificationApp,
-          );
-          DataSingleton.setData(DataSingletonKey.IS_CLICK_NOTIFY, true);
-          console.log('getInitialNotification', JSON.stringify(remoteMessage));
-        }
-      });
-
-    // Listen when a new message arrives in the foreground mode -----------------------> đã OK
-    messaging().onMessage(async (remoteMessage: any) => {
-      console.log(
-        'firebase/messaging A new FCM message arrived!',
-        remoteMessage,
-      );
-    });
-
-    // Listen when a new message arrives in the background & quit mode
-    messaging().setBackgroundMessageHandler(async (remoteMessage: any) => {
-      let timePause = DataSingleton.getData('onAppPauseTime', moment().unix());
-
-      // Alert.al6ert('A new FCM message background!', JSON.stringify(remoteMessage));
-      console.log(
-        'firebase/messaging Message handled in the background!',
-        remoteMessage,
-      );
-      if (remoteMessage) {
-        let notificationApp: NotificationApp = remoteMessage;
-        DataSingleton.setData(
-          DataSingletonKey.DATA_NOTIFY_FIREBASE,
-          notificationApp,
-        );
-        DataSingleton.setData(DataSingletonKey.IS_CLICK_NOTIFY, true);
-      }
-    });
-
-    // When the application is running, but in the background.
-    // Ẩn app
-    messaging().onNotificationOpenedApp(async (remoteMessage: any) => {
-      // console.log('=========> ON PUSH FIREBASE CLICKED: ', remoteMessage);
-      console.log(
-        'firebase/messaging Notification caused app to open from background state:',
-        remoteMessage,
-      );
-      if (remoteMessage) {
-        let notificationApp: NotificationApp = remoteMessage;
-        DataSingleton.setData(
-          DataSingletonKey.DATA_NOTIFY_FIREBASE,
-          notificationApp,
-        );
-        DataSingleton.setData(DataSingletonKey.IS_CLICK_NOTIFY, true);
-        console.log(
-          'When the application is running, but in the background.',
-          JSON.stringify(remoteMessage),
-        );
-      }
-    });
-  }
-
-  cancelAllNotify = async () => {
-    PushNotification.cancelAllLocalNotifications();
-  };
-
-  async requestUserPermission() {
-    // Permissions reference : https://rnfirebase.io/messaging/ios-permissions
-    const authStatus = await messaging().requestPermission({
-      alert: true, //Sets whether notifications can be displayed to the user on the device
-      badge: true, //Sets whether a notification dot will appear next to the app icon on the device when there are unread notifications
-      sound: true, //Sets whether a sound will be played when a notification is displayed on the device
-    });
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-    if (enabled) {
-      console.log('firebase/messaging Authorization status:', authStatus);
-    } else {
-      console.log(
-        'firebase/messaging Authorization status:',
-        'Push notification is not allowed!',
-      );
-      // showBaseAlert("NOT ALLOWED", "OK")
-    }
-  }
 
   /*******************************************************************************************************************************
    * Render
