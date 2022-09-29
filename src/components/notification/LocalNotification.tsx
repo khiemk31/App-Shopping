@@ -1,4 +1,5 @@
 import React, {PureComponent} from 'react';
+import {BaseProps, BaseState} from '../../container/screens/base/BaseComponent';
 import {
   View,
   ViewStyle,

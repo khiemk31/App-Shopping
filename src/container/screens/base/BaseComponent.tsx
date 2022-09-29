@@ -3,7 +3,8 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import React from 'react';
 import {BackHandler, NativeEventSubscription, YellowBox} from 'react-native';
 import {NavigationParams} from 'react-navigation';
-import TextBase from '../../../components/TextViewBase';
+import TextViewBase from '../../../components/TextViewBase';
+
 import colors from '../../../res/colors';
 import sizes from '../../../res/sizes';
 import strings from '../../../res/strings';
@@ -270,7 +271,7 @@ export default class BaseComponent<
 
   renderEmptyView() {
     return (
-      <TextBase
+      <TextViewBase
         title={strings.no_data}
         style={{
           textAlign: 'center',

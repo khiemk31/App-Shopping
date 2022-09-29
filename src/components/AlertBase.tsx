@@ -2,10 +2,10 @@ import React, {Component} from 'react';
 import {View, TouchableOpacity} from 'react-native';
 import TextBase from './TextViewBase';
 // import {popupListIsShowing} from './PopupList';
-import colors from '../res/colors';
+import colors from '../../src/res/colors';
 import ModalByViewBase from './ModalByViewBase';
-import sizes from '../res/sizes';
-import fonts from '../res/fonts';
+import sizes from '../../src/res/sizes';
+import fonts from '../../src/res/fonts';
 
 export interface DataPopup {
   title?: string;

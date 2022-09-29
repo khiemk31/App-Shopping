@@ -1,9 +1,9 @@
 import * as React from 'react';
 import {View, StyleSheet} from 'react-native';
-import sizes from '../res/sizes';
-import colors from '../res/colors';
+import sizes from '../../src/res/sizes';
+import colors from '../../src/res/colors';
 import TextBase from './TextViewBase';
-import strings from '../res/strings';
+import strings from '../../src/res/strings';
 
 interface ConnectStatusProps {
   message?: string;

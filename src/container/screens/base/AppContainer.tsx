@@ -1,18 +1,41 @@
-import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
-import LoginScreen from '../login/LoginScreen';
+import {createCompatNavigatorFactory} from '@react-navigation/compat';
+import {createAppContainer, createSwitchNavigator} from 'react-navigation';
 import HomeScreen from '../home/HomeScreen';
-
+import LoginScreen from '../login/LoginScreen';
+import SplashScreen from '../splash_screen/SplashScreen';
 export enum ScreenName {
-  HOME_SCREEN = 'HomeScreen',
-  LOGIN_SCREEN = 'LoginScreen',
+  LOGIN = 'LoginScreen',
+  HOME = 'HomeScreen',
+  SPLASH = 'SplashScreen',
 }
-export default function MyStack() {
-  const Stack = createStackNavigator();
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name={ScreenName.LOGIN_SCREEN} component={LoginScreen} />
-      <Stack.Screen name={ScreenName.HOME_SCREEN} component={HomeScreen} />
-    </Stack.Navigator>
-  );
-}
+
+const AppNavigator = createCompatNavigatorFactory(createStackNavigator)(
+  {
+    HomeScreen: {screen: HomeScreen},
+    LoginScreen: {screen: LoginScreen},
+    SplashScreen: {screen: SplashScreen},
+  },
+  {
+    headerMode: 'none',
+    initialRouteName: ScreenName.SPLASH,
+  },
+);
+
+/**********************************************************************************************************************************
+ *
+ * Implement switch navigator
+ *
+ **********************************************************************************************************************************/
+
+const switchNavigator = createSwitchNavigator(
+  {
+    AppNavigator: AppNavigator,
+  },
+  {
+    initialRouteName: 'AppNavigator',
+  },
+);
+
+const AppContainer = createAppContainer(switchNavigator);
+export default AppContainer;

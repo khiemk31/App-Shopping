@@ -1,8 +1,20 @@
 import NetInfo from '@react-native-community/netinfo';
+import messaging from '@react-native-firebase/messaging';
+import PushNotification from 'react-native-push-notification';
+import analytics from '@react-native-firebase/analytics';
 import {NavigationContainer, NavigationState} from '@react-navigation/native';
 import moment from 'moment';
 import React, {Component} from 'react';
-import {AppRegistry, DeviceEventEmitter, LogBox, AppState} from 'react-native';
+import {
+  AppRegistry,
+  StatusBar,
+  Text,
+  DeviceEventEmitter,
+  LogBox,
+  AppState,
+} from 'react-native';
+import {Provider} from 'react-redux';
+import {createStore} from 'redux';
 import {
   EMIT_APP_PAUSE,
   EMIT_APP_RESUME,
@@ -10,12 +22,14 @@ import {
   SettingKey,
 } from '../../../common/Constant';
 import DataSingleton, {DataSingletonKey} from '../../../common/DataSingleton';
+import {NotificationApp} from '../../../common/Type';
 import AlertBase from '../../../components/AlertBase';
 import ConnectStatusComponent from '../../../components/ConnectStatusComponent';
 import {Loading, mobileLoadingService} from '../../../components/Loading';
 import NoInternet from '../../../components/no_internet/NoInternet';
 import PopupAlertBase from '../../../components/PopupAlertBase';
 import PopupBase from '../../../components/PopupBase';
+import AppReducer from '../../../redux/reducers';
 import sizes from '../../../res/sizes';
 import strings from '../../../res/strings';
 import AppContainer from './AppContainer';
@@ -24,7 +38,8 @@ import LocalNotification, {
   NotificationType,
 } from '../../../components/notification/LocalNotification';
 0;
-
+import RootView from './RootView';
+import api from '../../../api/api';
 import UtilsStorage from '../../../utils/UtilsStorage';
 import {getDeviceinfor} from '../../../utils/UtilsDevice';
 import AdSdk from '../../../sdk/AdSdk';
@@ -48,6 +63,18 @@ if (!__DEV__) {
 }
 
 export var isAppPaused: boolean = false;
+
+// const middlewares = [];
+
+// if (__DEV__) {
+//   const { logger } = require(`redux-logger`);
+//   middlewares.push(logger);
+// }
+
+export var reduxStore = createStore(
+  AppReducer,
+  // applyMiddleware(...middlewares)
+);
 
 /**
  *
@@ -133,6 +160,7 @@ class App extends Component<Props> {
     //@ts-ignore
     DataSingleton.setData(DataSingletonKey.DEVICE_ID, deviceinfo.uniqueId);
     this.getCache();
+    this.requestUserPermission();
     this.onSetLanguage();
     this._subscriptionAppResume = DeviceEventEmitter.addListener(
       EMIT_APP_RESUME,
@@ -154,6 +182,14 @@ class App extends Component<Props> {
   getCache = async () => {};
   componentDidMount = async () => {
     // strings.setLanguage("vi");
+    try {
+      let token = await messaging().getToken();
+      DataSingleton.setData(DataSingletonKey.FIREBASE_KEY, token);
+      console.log('FIREBASE_KEY, day la token FCM', token);
+    } catch (error) {
+      DataSingleton.setData(DataSingletonKey.FIREBASE_KEY, null);
+      console.log('err_FIREBASE_KEY', error);
+    }
 
     this._taskInterval = setInterval(
       this._handleTimeInterval,
@@ -161,6 +197,11 @@ class App extends Component<Props> {
     );
 
     this.setupConnectivityListener();
+
+    // Setup auto init firebase analytics
+    await analytics().setAnalyticsCollectionEnabled(true);
+
+    this.setupFirebaseMessageListener();
 
     // Setup local notification listener, using to handle the callback when user click into notification
     if (localNotification) {
@@ -176,7 +217,10 @@ class App extends Component<Props> {
 
   componentWillUnmount() {
     clearInterval(this._taskInterval);
-
+    this._onAppResume &&
+      DeviceEventEmitter.removeListener(EMIT_APP_RESUME, this._onAppResume);
+    this._onAppPause &&
+      DeviceEventEmitter.removeListener(EMIT_APP_PAUSE, this._onAppPause);
     // this._onDispatchTouchEvent && DeviceEventEmitter.removeListener(EMIT_DISPATCH_TOUCH_EVENT, this._onDispatchTouchEvent);
     this.unsubscribe && this.unsubscribe();
     // Delete all data temporary
@@ -279,11 +323,224 @@ class App extends Component<Props> {
     });
   };
 
+  /******************************************************************************************************************************
+   * Firebase
+   * Sử dụng để yêu cầu người dùng cấp quyền push notification cho ứng dụng
+   *
+   ******************************************************************************************************************************/
+  setupFirebaseMessageListener() {
+    // Check whether an initial notification is available
+    messaging()
+      .getInitialNotification()
+      .then((remoteMessage: any) => {
+        if (remoteMessage) {
+          let notificationApp: NotificationApp = remoteMessage;
+          DataSingleton.setData(
+            DataSingletonKey.DATA_NOTIFY_FIREBASE,
+            notificationApp,
+          );
+          DataSingleton.setData(DataSingletonKey.IS_CLICK_NOTIFY, true);
+          console.log('getInitialNotification', JSON.stringify(remoteMessage));
+        }
+      });
+
+    // Listen when a new message arrives in the foreground mode -----------------------> đã OK
+    messaging().onMessage(async (remoteMessage: any) => {
+      console.log(
+        'firebase/messaging A new FCM message arrived!',
+        remoteMessage,
+      );
+    });
+
+    // Listen when a new message arrives in the background & quit mode
+    messaging().setBackgroundMessageHandler(async (remoteMessage: any) => {
+      let timePause = DataSingleton.getData('onAppPauseTime', moment().unix());
+
+      // Alert.al6ert('A new FCM message background!', JSON.stringify(remoteMessage));
+      console.log(
+        'firebase/messaging Message handled in the background!',
+        remoteMessage,
+      );
+      if (remoteMessage) {
+        let notificationApp: NotificationApp = remoteMessage;
+        DataSingleton.setData(
+          DataSingletonKey.DATA_NOTIFY_FIREBASE,
+          notificationApp,
+        );
+        DataSingleton.setData(DataSingletonKey.IS_CLICK_NOTIFY, true);
+      }
+    });
+
+    // When the application is running, but in the background.
+    // Ẩn app
+    messaging().onNotificationOpenedApp(async (remoteMessage: any) => {
+      // console.log('=========> ON PUSH FIREBASE CLICKED: ', remoteMessage);
+      console.log(
+        'firebase/messaging Notification caused app to open from background state:',
+        remoteMessage,
+      );
+      if (remoteMessage) {
+        let notificationApp: NotificationApp = remoteMessage;
+        DataSingleton.setData(
+          DataSingletonKey.DATA_NOTIFY_FIREBASE,
+          notificationApp,
+        );
+        DataSingleton.setData(DataSingletonKey.IS_CLICK_NOTIFY, true);
+        console.log(
+          'When the application is running, but in the background.',
+          JSON.stringify(remoteMessage),
+        );
+      }
+    });
+  }
+
+  cancelAllNotify = async () => {
+    PushNotification.cancelAllLocalNotifications();
+  };
+
+  async requestUserPermission() {
+    // Permissions reference : https://rnfirebase.io/messaging/ios-permissions
+    const authStatus = await messaging().requestPermission({
+      alert: true, //Sets whether notifications can be displayed to the user on the device
+      badge: true, //Sets whether a notification dot will appear next to the app icon on the device when there are unread notifications
+      sound: true, //Sets whether a sound will be played when a notification is displayed on the device
+    });
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    if (enabled) {
+      console.log('firebase/messaging Authorization status:', authStatus);
+    } else {
+      console.log(
+        'firebase/messaging Authorization status:',
+        'Push notification is not allowed!',
+      );
+      // showBaseAlert("NOT ALLOWED", "OK")
+    }
+  }
+
   /*******************************************************************************************************************************
    * Render
    * Implement render mothod
    *
    *******************************************************************************************************************************/
+  render() {
+    const {checkNetwork, titleInternet} = this.state;
+    return (
+      <Provider store={reduxStore}>
+        <RootView>
+          <StatusBar
+            translucent
+            backgroundColor="transparent"
+            barStyle={'dark-content'}
+          />
+          <NavigationContainer
+            ref={(ref: any) => {
+              if (ref) {
+                NavigationService.setTopLevelNavigator(ref);
+              }
+            }}
+            onStateChange={async (state: any) => {
+              // console.log(state);
+              // Nếu currentState index mà lớn hơn newState index tức là người dùng đang thực hiện tác vụ back về màn trước,
+              // trong trường hợp này sẽ cancel tất cả các request của màn hình hiện tại.
+              if (this.currentState && this.currentState.index > state.index) {
+                mobileLoadingService.loading = false;
+                api.cancelRequestController[this.currentState.index].map(
+                  (cancel: any) => {
+                    cancel();
+                  },
+                );
+                api.cancelRequestController[this.currentState.index] = [];
+              }
+
+              this.currentState = state;
+
+              if (state.routes && state.routes.length > 0) {
+                NavigationService.setActiveScreen(
+                  state.routes[state.routes.length - 1].name,
+                );
+                NavigationService.setParentOfActiveScreen(state.routes[0].name);
+                let currentRouteName =
+                  state.routes[state.routes.length - 1].name;
+                await analytics().logScreenView({
+                  screen_name: currentRouteName,
+                  screen_class: currentRouteName,
+                });
+              }
+            }}>
+            <AppContainer />
+          </NavigationContainer>
+          <PopupAlertBase
+            ref={(ref: PopupAlertBase) => {
+              if (ref) {
+                PopupEvent = ref;
+              }
+            }}
+          />
+          <PopupBase
+            ref={(ref: PopupBase) => {
+              if (ref) {
+                PopupCommon = ref;
+              }
+            }}
+          />
+          <AlertBase
+            ref={(ref: AlertBase) => {
+              if (ref) {
+                alertBase = ref;
+              }
+            }}
+          />
+          {!checkNetwork && <NoInternet title={titleInternet} />}
+          <ConnectStatusComponent
+            ref={(ref: ConnectStatusComponent) => {
+              if (ref) {
+                messageConnect = ref;
+              }
+            }}
+          />
+
+          {/* {!__DEV__ && 
+          <PopupCheckNewVersion />
+        } */}
+          <Text
+            style={{
+              position: 'absolute',
+              right: sizes._10sdp,
+              bottom: sizes._10sdp,
+            }}>
+            {this.state.codePushVersion}
+          </Text>
+          <Text
+            style={{
+              position: 'absolute',
+              right: sizes._10sdp,
+              bottom: sizes._30sdp,
+            }}>
+            {this.state.timeOut}
+          </Text>
+          <Loading
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          />
+          <LocalNotification
+            ref={(ref: any) => {
+              localNotification = ref;
+            }}
+          />
+        </RootView>
+      </Provider>
+    );
+  }
 }
 
 export default App;
