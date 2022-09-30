@@ -46,7 +46,7 @@ const dotMoney = (str: string, typeMoneyFormat: TYPE_MONEY): string => {
     return str;
   }
 };
- export const currencyFormat = (num: number) => {
+export const currencyFormat = (num: number) => {
   if (num === null || num === undefined || num === -1) {
     return '0';
   } else {

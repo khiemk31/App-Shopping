@@ -428,7 +428,7 @@ export const checkPermissions = async (platform: string) => {
 export const formatPhoneNumber = (value: string) => {
   if (!value) return value;
 
-  const currentValue = value.replace(/[^\d]/g, "");
+  const currentValue = value.replace(/[^\d]/g, '');
   const cvLength = currentValue.length;
 
   // returns: "x", "xx", "xxx", "xxxx"
@@ -441,6 +441,6 @@ export const formatPhoneNumber = (value: string) => {
   // returns: "xxxx xxx-", xxxx xxx-x", "xxxx xxx-xx", "xxxx xxx-xxx", "xxxx xxx-xxxx"
   return `${currentValue.slice(0, 4)} ${currentValue.slice(
     4,
-    7
+    7,
   )} ${currentValue.slice(7, 11)}`;
-}
+};

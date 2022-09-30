@@ -4,10 +4,9 @@ export const setReduxState = (state: any) => {
     ...state,
   };
 };
-export const setBadge = (badge: number|undefined)=>{
-  
+export const setBadge = (badge: number | undefined) => {
   return {
     type: 'SET_BADGE',
-    badge: badge
-  }
-}
+    badge: badge,
+  };
+};

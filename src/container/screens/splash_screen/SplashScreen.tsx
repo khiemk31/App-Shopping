@@ -22,7 +22,7 @@ export default class SplashScreen extends BaseComponent<Props, State> {
       this.setState({loading: false}, () => {
         this.onFinish();
       });
-    }, 5000);
+    }, 1000);
   }
 
   _initData = async () => {
@@ -48,8 +48,8 @@ export default class SplashScreen extends BaseComponent<Props, State> {
           alignItems: 'center',
           backgroundColor: colors._color_backgound,
         }}
-        imageStyle={{resizeMode: 'stretch'}}
-        resizeMode={'stretch'}
+        imageStyle={{resizeMode: 'cover'}}
+        resizeMode={'cover'}
         source={images.Splash}>
         {/* <TextViewBase
           style={{

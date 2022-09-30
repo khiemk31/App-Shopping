@@ -3,7 +3,7 @@ import {combineReducers} from 'redux';
 const initialState = {
   userName: '',
   sessionId: '',
-  badge: 3
+  badge: 3,
 };
 
 function createReducer(initialState: any, handlers: any) {
@@ -24,14 +24,13 @@ const mainReducer = createReducer(initialState, {
       ...newState,
     };
   },
-  ['SET_BADGE'](state: any, action: any){
+  ['SET_BADGE'](state: any, action: any) {
     let {type, ...newState} = action;
     return {
       ...state,
       ...newState,
     };
-  }
+  },
 });
-
 
 export default mainReducer;
