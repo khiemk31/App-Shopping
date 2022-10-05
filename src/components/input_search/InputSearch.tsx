@@ -39,7 +39,7 @@ const InputSearch = (props: InputSearchProps) => {
       />
       {!!text && (
         <TouchableOpacity onPress={onDeleteText}>
-          <Image source={images.ic_delete_search} style={styles.iconDelete} />
+          <Image source={images.ic_search} style={styles.iconDelete} />
         </TouchableOpacity>
       )}
     </View>

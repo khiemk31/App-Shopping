@@ -34,7 +34,8 @@ export default class SplashScreen extends BaseComponent<Props, State> {
     this._startCountdownTime();
   }
   onFinish = async () => {
-    NavigationService.reset(ScreenName.HOME);
+    console.log('Chạy vào đây ');
+    NavigationService.reset(ScreenName.BOTTOMTABS);
   };
   componentWillUnmount = () => {};
 
@@ -50,22 +51,7 @@ export default class SplashScreen extends BaseComponent<Props, State> {
         }}
         imageStyle={{resizeMode: 'cover'}}
         resizeMode={'cover'}
-        source={images.Splash}>
-        {/* <TextViewBase
-          style={{
-            textAlign:'center',
-            fontFamily: 'SF Pro Display',
-            fontSize: sizes._35sdp,
-            fontWeight: 'bold',
-            color: '#3F3F3F',
-            marginTop: sizes._155sdp,
-            marginHorizontal: sizes._35sdp,
-          }}
-          numberOfLines={2}
-          >
-          Everything you        can imagine is real
-        </TextViewBase> */}
-      </ImageBackground>
+        source={images.Splash}></ImageBackground>
     );
   }
 }

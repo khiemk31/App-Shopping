@@ -10,92 +10,72 @@ import images from '../../src/res/images';
 import sizes from '../../src/res/sizes';
 import NavigationService from '../container/screens/base/NavigationService';
 import fonts from '../../src/res/fonts';
-import BaseComponent from '../container/screens/base/BaseComponent';
+import BaseComponent, {
+  BaseProps,
+} from '../container/screens/base/BaseComponent';
+import TextViewBase from './TextViewBase';
+import colors from '../res/colors';
 
 interface State {}
 
-interface Props {
+interface Props extends BaseProps {
   title?: String;
   icon?: any;
   height?: number;
   width?: number;
   onPress?: () => void;
   style?: ViewStyle;
-  search?: boolean;
-  searchContent?: String;
   goBack?: () => void;
-  onSearch?: (value: string) => void;
   onPressRight?: () => void;
-  isIconRight?: boolean;
-  isIconLeft?: boolean;
-  isIconHome?: boolean;
+  isIconRight: boolean;
+  isIconLeft: boolean;
 }
 
-class HeaderBar extends BaseComponent<State, Props> {
+export default class HeaderBar extends BaseComponent<Props, State> {
   state: State = {};
-  props: Props = {
-    isIconLeft = false,
-  };
+
   render() {
     return (
       <View style={[styles.container, {...this.props.style}]}>
-        {!props.isIconLeft && (
+        {this.props.isIconLeft ? (
           <TouchableOpacity
             style={{
               padding: sizes._5sdp,
             }}
             onPress={() => {
-              props?.goBack ? props?.goBack() : NavigationService.pop();
+              console.log('CLick');
+              // this.props?.goBack
+              //   ? this.props?.goBack()
+              //   : NavigationService.pop();
             }}>
             <Image
-              source={props.icon ?? images.ic_notification}
+              source={this.props.icon ?? images.ic_notification}
               style={styles.icon}
             />
           </TouchableOpacity>
+        ) : (
+          <></>
         )}
-        {props.title ? (
+        {this.props.title ? (
           <TextViewBase style={styles.title}>
-            {props.title}
+            {this.props.title}
             {''}
           </TextViewBase>
         ) : (
           <></>
         )}
-        {!props.isIconHome ?? (
+
+        {this.props.isIconRight ? (
           <TouchableOpacity
-            {...props}
+            onPress={this.props.onPressRight}
             style={{
               padding: sizes._5sdp,
-              backgroundColor: 'red',
-            }}
-            onPress={() => {
-              NavigationService.reset(ScreenName.HOME);
             }}>
-            <Image
-              source={images.ic_notification}
-              style={[styles.icon, {marginRight: !props.isIconRight ? 0 : 0}]}
-            />
+            <Image source={images.ic_notification} style={styles.icon} />
           </TouchableOpacity>
+        ) : (
+          <></>
         )}
-        {props.isIconRight &&
-          (props.search ? (
-            <View>
-              <InputSearch
-                inputProps={{placeholder: 'Tìm kiếm'}}
-                onSearch={props.onSearch}
-              />
-            </View>
-          ) : (
-            <TouchableOpacity
-              {...props}
-              onPress={props.onPressRight}
-              style={{
-                padding: sizes._5sdp,
-                backgroundColor: 'blue',
-              }}>
-              <Image source={images.ic_search} style={styles.icon} />
-            </TouchableOpacity>
-          ))}
       </View>
     );
   }
@@ -103,8 +83,8 @@ class HeaderBar extends BaseComponent<State, Props> {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: colors._color_white,
     paddingTop: sizes._statusbar_height,
-    paddingHorizontal: sizes._20sdp,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'space-between',

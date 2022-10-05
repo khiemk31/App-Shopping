@@ -197,6 +197,9 @@ const colors = new (class {
   _color_EB1B1B = '#EB1B1B';
   _color_transparent = 'transparent';
   _color_FF0000 = '#FF0000';
+  _color_942A59 = '#942A59';
+  _color_D16F9A = '#D16F9A';
+  _color_9A3763 = '#9A3763';
 })();
 
 export default colors;
