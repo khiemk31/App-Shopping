@@ -35,4 +35,9 @@ export default {
   string_success: 'Success',
   err_pass: 'Phone or password is not correct',
   unknown_error: 'Please try again latter.',
+  login: 'Login',
+  inputEmail: 'Enter your Email',
+  inputPassword: 'Enter password',
+  forgotPassword: 'Forgot Password?',
+  orLoginWith: 'Or login with',
 };

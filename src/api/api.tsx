@@ -65,7 +65,7 @@ export enum FileUploadType {
 const DEV_MODE = false;
 
 const x_key = DEV_MODE ? '' : '';
-let BASE_URL = DEV_MODE ? '' : 'https://remdongco.d2t.vn/';
+let BASE_URL = DEV_MODE ? '' : '';
 export const getUserInfo = () => {
   return DEV_MODE
     ? {
@@ -146,14 +146,14 @@ class Api {
     return Axios.get(fixURL ? fixURL + url : BASE_URL + url, {
       headers: headers ? headers : {},
       params: params ? params : {},
-      cancelToken: new CancelToken(cancel => {
+      cancelToken: new CancelToken((cancel:any) => {
         // An executor function receives a cancel function as a parameter
         if (isCancelPreRequest) {
           this.mapRequestCancel.set(url, cancel);
         }
       }),
     })
-      .then(res => {
+      .then((res:any) => {
         mobileLoadingService.loading = false;
         if (res.data) {
           console.log('=======> RESPONSE: ' + JSON.stringify(res.data));
@@ -162,7 +162,7 @@ class Api {
           return {};
         }
       })
-      .catch(error => {
+      .catch((error:any) => {
         mobileLoadingService.loading = false;
         console.log('=========> error: ', error.response);
         errorResponse && errorResponse(error.response);
@@ -238,7 +238,7 @@ class Api {
       paramsConverted ? paramsConverted : params != null ? params : {},
       {
         headers: headers ? headers : {},
-        cancelToken: new CancelToken(cancel => {
+        cancelToken: new CancelToken((cancel:any) => {
           // An executor function receives a cancel function as a parameter
           if (isCancelPreRequest) {
             this.mapRequestCancel.set(url, cancel);
@@ -252,7 +252,7 @@ class Api {
         }),
       },
     )
-      .then(res => {
+      .then((res:any) => {
         if (!dontHideLoading) {
           mobileLoadingService.loading = false;
         }
@@ -298,7 +298,7 @@ class Api {
           return {};
         }
       })
-      .catch(error => {
+      .catch((error:any) => {
         console.log('error', error.response);
         errorResponse && errorResponse(error.response);
         if (!dontHideLoading) {

@@ -14,20 +14,20 @@ type State = {};
 
 class ImageBase extends Component<Props, State> {
   render() {
-    const {height, width, boderRadius} = this.props;
+    const {height, width, boderRadius,style} = this.props;
     return (
       <View>
         <Image
           {...this.props}
           resizeMode={'contain'}
           source={this.props.imageSource}
-          style={[
-            {
+          style={{
+              
+              ...style,
               height: height ? height : sizes._30sdp,
-              width: width ? width : sizes._30sdp,
-            },
-            this.props.style,
-          ]}
+              width: width ? width : sizes._30sdp
+            }
+          }
         />
       </View>
     );

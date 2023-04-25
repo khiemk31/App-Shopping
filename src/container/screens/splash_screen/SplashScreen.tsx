@@ -34,8 +34,7 @@ export default class SplashScreen extends BaseComponent<Props, State> {
     this._startCountdownTime();
   }
   onFinish = async () => {
-    console.log('Chạy vào đây ');
-    NavigationService.reset(ScreenName.BOTTOMTABS);
+    NavigationService.reset(ScreenName.LOGIN);
   };
   componentWillUnmount = () => {};
 

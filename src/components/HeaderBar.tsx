@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 import images from '../../src/res/images';
 import sizes from '../../src/res/sizes';
-import NavigationService from '../container/screens/base/NavigationService';
 import fonts from '../../src/res/fonts';
 import BaseComponent, {
   BaseProps,
