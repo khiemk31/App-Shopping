@@ -11,7 +11,7 @@ import TextViewBase from '../../../components/TextViewBase';
 import strings from '../../../res/strings';
 import ImageBase from '../../../components/ImageBase';
 import images from '../../../res/images';
-
+import GoogleHandle from '../../../auth/GoogleHandle';
 export default function LoginScreen() {
   return (
     <View style={styles.container}>
@@ -49,7 +49,9 @@ export default function LoginScreen() {
           marginTop: sizes._26sdp,
         }}>
         <TouchableOpacity
-          onPress={() => {}}
+          onPress={() => {
+            GoogleHandle.getInstance().signInToApp((res: any) => {}, true);
+          }}
           style={{
             width: sizes._48sdp,
             height: sizes._48sdp,
